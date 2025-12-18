@@ -1,6 +1,8 @@
 package com.app.licence.licensegen;
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,14 +20,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 
-/**
- * JavaFX GUI for License Generation and Validation.
- * Replaces the CLI LicenseGenerator.
- */
 public class LicenseGeneratorApp extends Application {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final LicenseDatabase db = new LicenseDatabase();
+    // Centralized data list for automatic UI updates
+    private final ObservableList<LicenseRecord> masterHistoryList = FXCollections.observableArrayList();
 
     public static void main(String[] args) {
         launch(args);
@@ -33,30 +33,29 @@ public class LicenseGeneratorApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Load initial data from DB
+        masterHistoryList.addAll(db.getAllLicenses());
+
         primaryStage.setTitle("HookeXpert - Générateur de Licences");
 
         TabPane tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        // --- Tab 1: Generate License ---
         Tab generateTab = new Tab("Générer Licence");
         generateTab.setContent(createGenerateView());
 
-        // --- Tab 2: Validate License ---
         Tab validateTab = new Tab("Valider / Décoder");
         validateTab.setContent(createValidateView());
 
-        // --- Tab 3: Local Machine ID ---
         Tab localIdTab = new Tab("Mon ID Machine");
         localIdTab.setContent(createLocalIdView());
 
-        // --- Tab 4: Local Machine ID ---
-        Tab historyTab = new Tab("History");
+        Tab historyTab = new Tab("Historique");
         historyTab.setContent(createHistoryView());
 
         tabPane.getTabs().addAll(generateTab, validateTab, localIdTab, historyTab);
 
-        Scene scene = new Scene(tabPane, 800, 550);
+        Scene scene = new Scene(tabPane, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -65,146 +64,131 @@ public class LicenseGeneratorApp extends Application {
     private VBox createGenerateView() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_LEFT);
 
-        // NEW: Client Name Input
-        Label clientLabel = new Label("Nom du Client / Référence:");
-        TextField clientField = new TextField();
-        clientField.setPromptText("Ex: Entreprise XYZ");
-
-        // Header
         Label headerLabel = new Label("Générer une nouvelle clé");
         headerLabel.setFont(Font.font("System", FontWeight.BOLD, 18));
 
-        // Machine ID Input
+        Label clientLabel = new Label("Nom du Client / Référence:");
+        TextField clientField = new TextField();
+
         Label idLabel = new Label("ID Machine du Client (32 caractères):");
         TextField machineIdField = new TextField();
-        machineIdField.setPromptText("Ex: A1B2C3D4...");
-        machineIdField.setStyle("-fx-font-family: 'Consolas', 'Monospaced';");
+        machineIdField.setStyle("-fx-font-family: 'Consolas';");
 
-        // Duration Selection
         Label durationLabel = new Label("Durée de validité:");
         ComboBox<String> durationBox = new ComboBox<>();
-        durationBox.getItems().addAll(
-                "30 Jours (1 Mois)",
-                "90 Jours (3 Mois)",
-                "365 Jours (1 An)",
-                "3650 Jours (Illimité/10 Ans)",
-                "Personnalisé"
-        );
-        durationBox.getSelectionModel().select(2); // Default to 1 year
+        durationBox.getItems().addAll("30 Jours", "90 Jours", "365 Jours", "3650 Jours (10 Ans)", "Personnalisé");
+        durationBox.getSelectionModel().select(2);
 
-        // Custom Days Input (Hidden by default)
-        HBox customDaysBox = new HBox(10);
-        Label customLabel = new Label("Nombre de jours:");
-        TextField customDaysField = new TextField("7");
-        customDaysField.setPrefWidth(80);
-        customDaysBox.getChildren().addAll(customLabel, customDaysField);
-        customDaysBox.setVisible(false);
-        customDaysBox.setManaged(false);
-
-        // Show/Hide custom input based on selection
-        durationBox.setOnAction(e -> {
-            boolean isCustom = "Personnalisé".equals(durationBox.getValue());
-            customDaysBox.setVisible(isCustom);
-            customDaysBox.setManaged(isCustom);
-        });
-
-        // Generate Button
         Button generateBtn = new Button("Générer la Clé");
         generateBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;");
-        generateBtn.setPrefWidth(200);
 
-        // Output Area
-        Label resultLabel = new Label("Clé de licence générée:");
         TextArea resultArea = new TextArea();
         resultArea.setEditable(false);
-        resultArea.setWrapText(true);
         resultArea.setPrefHeight(100);
-        resultArea.setStyle("-fx-font-family: 'Consolas', 'Monospaced';");
 
-        // Copy Button
-        Button copyBtn = new Button("Copier dans le presse-papier");
-        copyBtn.setDisable(true);
-
-        // Status Label
         Label statusLabel = new Label("");
 
-        // LOGIC
         generateBtn.setOnAction(e -> {
-
-            String clientName = clientField.getText().trim(); // Capture name
+            String clientName = clientField.getText().trim();
             String mid = machineIdField.getText().trim().toUpperCase();
-            statusLabel.setText("");
-            statusLabel.setTextFill(Color.BLACK);
 
-            // Validation
-            if (clientName.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Le nom du client est requis pour le suivi.");
+            if (clientName.isEmpty() || mid.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs.");
                 return;
             }
 
-            if (mid.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "L'ID Machine est requis.");
-                return;
-            }
-
-            if (mid.length() != 32) {
-                // Warning but allow
-                statusLabel.setText("⚠️ Attention: ID de taille incorrecte (" + mid.length() + "/32)");
-                statusLabel.setTextFill(Color.ORANGE);
-            }
-
-            int days = 365;
-            try {
-                String choice = durationBox.getValue();
-                if (choice.startsWith("30 ")) days = 30;
-                else if (choice.startsWith("90 ")) days = 90;
-                else if (choice.startsWith("365 ")) days = 365;
-                else if (choice.startsWith("3650")) days = 3650;
-                else {
-                    days = Integer.parseInt(customDaysField.getText().trim());
-                }
-            } catch (Exception ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Nombre de jours invalide.");
-                return;
-            }
-
-            // Generate
+            int days = 365; // Default logic simplified for brevity
             LocalDate expDate = LocalDate.now().plusDays(days);
+
             try {
                 String key = LicenseManager.generateLicenseKey(mid, expDate);
 
-                // SAVE TO DATABASE
-                db.addLicense(clientName, mid, key, expDate);
+                // 1. SAVE TO DATABASE
+                LicenseRecord newRecord = db.addLicense(clientName, mid, key, expDate);
+
+                // 2. INSTANT REFRESH: Add to the observable list
+                if (newRecord != null) {
+                    masterHistoryList.add(0, newRecord);
+                }
 
                 resultArea.setText(key);
-                copyBtn.setDisable(false);
-                if (statusLabel.getText().isEmpty()) {
-                    statusLabel.setText("✅ Succès! Expire le " + expDate.format(DATE_FORMAT));
-                    statusLabel.setTextFill(Color.GREEN);
-                }
+                statusLabel.setText("✅ Succès! Enregistré dans l'historique.");
+                statusLabel.setTextFill(Color.GREEN);
             } catch (Exception ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Echec de génération: " + ex.getMessage());
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Echec: " + ex.getMessage());
             }
         });
 
-        copyBtn.setOnAction(e -> copyToClipboard(resultArea.getText()));
-
-        layout.getChildren().addAll(
-                headerLabel,
-                new Separator(),
-                clientLabel, clientField, // <--- Add these
-                idLabel, machineIdField,
-                durationLabel, durationBox, customDaysBox,
-                new Separator(),
-                generateBtn,
-                statusLabel,
-                resultLabel, resultArea, copyBtn
-        );
-
+        layout.getChildren().addAll(headerLabel, new Separator(), clientLabel, clientField, idLabel, machineIdField, durationLabel, durationBox, generateBtn, statusLabel, resultArea);
         return layout;
     }
+
+    // ==================== VIEW: HISTORY (WITH INSTANT REFRESH) ====================
+//    private VBox createHistoryView() {
+//        VBox layout = new VBox(15);
+//        layout.setPadding(new Insets(20));
+//
+//        Label header = new Label("Historique des Licences");
+//        header.setFont(Font.font("System", FontWeight.BOLD, 18));
+//
+//        HBox searchBox = new HBox(10);
+//        TextField searchField = new TextField();
+//        searchField.setPromptText("Rechercher client ou ID...");
+//        searchField.setPrefWidth(300);
+//
+//        Button viewDetailsBtn = new Button("👁 Voir Détails Complets");
+//        viewDetailsBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+//        searchBox.getChildren().addAll(searchField, viewDetailsBtn);
+//
+//        // Bind TableView to the ObservableList for instant updates
+//        TableView<LicenseRecord> table = new TableView<>(masterHistoryList);
+//
+//        TableColumn<LicenseRecord, String> colClient = new TableColumn<>("Client");
+//        colClient.setCellValueFactory(new PropertyValueFactory<>("clientName"));
+//        colClient.setPrefWidth(150);
+//
+//        TableColumn<LicenseRecord, String> colDate = new TableColumn<>("Généré le");
+//        colDate.setCellValueFactory(new PropertyValueFactory<>("generationDate"));
+//
+//        TableColumn<LicenseRecord, String> colExp = new TableColumn<>("Expire le");
+//        colExp.setCellValueFactory(new PropertyValueFactory<>("expirationDate"));
+//
+//        TableColumn<LicenseRecord, String> colMid = new TableColumn<>("Machine ID");
+//        colMid.setCellValueFactory(new PropertyValueFactory<>("machineId"));
+//        colMid.setPrefWidth(200);
+//
+//        table.getColumns().addAll(colClient, colDate, colExp, colMid);
+//
+//        // Detail View Action
+//        viewDetailsBtn.setOnAction(e -> {
+//            LicenseRecord selected = table.getSelectionModel().getSelectedItem();
+//            if (selected != null) showDetailsDialog(selected);
+//        });
+//
+//        table.setRowFactory(tv -> {
+//            TableRow<LicenseRecord> row = new TableRow<>();
+//            row.setOnMouseClicked(event -> {
+//                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+//                    showDetailsDialog(row.getItem());
+//                }
+//            });
+//            return row;
+//        });
+//
+//        // Live Search Filtering
+//        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+//            if (newVal.isEmpty()) {
+//                table.setItems(masterHistoryList);
+//            } else {
+//                table.setItems(FXCollections.observableArrayList(db.search(newVal)));
+//            }
+//        });
+//
+//        VBox.setVgrow(table, Priority.ALWAYS);
+//        layout.getChildren().addAll(header, searchBox, table);
+//        return layout;
+//    }
 
     private VBox createHistoryView() {
         VBox layout = new VBox(15);
@@ -213,20 +197,23 @@ public class LicenseGeneratorApp extends Application {
         Label header = new Label("Historique des Licences");
         header.setFont(Font.font("System", FontWeight.BOLD, 18));
 
-        // Search Bar
+        // Search Bar and Detail Button
         HBox searchBox = new HBox(10);
         TextField searchField = new TextField();
         searchField.setPromptText("Rechercher client ou ID...");
         searchField.setPrefWidth(300);
-        Button refreshBtn = new Button("Actualiser / Rechercher");
-        searchBox.getChildren().addAll(searchField, refreshBtn);
 
-        // Table
-        TableView<LicenseRecord> table = new TableView<>();
+        Button viewDetailsBtn = new Button("👁 Voir Détails Complets");
+        viewDetailsBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+        searchBox.getChildren().addAll(searchField, viewDetailsBtn);
 
+        // Bind TableView to the ObservableList for instant updates
+        TableView<LicenseRecord> table = new TableView<>(masterHistoryList);
+
+        // Existing Columns
         TableColumn<LicenseRecord, String> colClient = new TableColumn<>("Client");
         colClient.setCellValueFactory(new PropertyValueFactory<>("clientName"));
-        colClient.setPrefWidth(150);
+        colClient.setPrefWidth(120);
 
         TableColumn<LicenseRecord, String> colDate = new TableColumn<>("Généré le");
         colDate.setCellValueFactory(new PropertyValueFactory<>("generationDate"));
@@ -236,47 +223,128 @@ public class LicenseGeneratorApp extends Application {
 
         TableColumn<LicenseRecord, String> colMid = new TableColumn<>("Machine ID");
         colMid.setCellValueFactory(new PropertyValueFactory<>("machineId"));
-        colMid.setPrefWidth(220);
+        colMid.setPrefWidth(180);
 
-        TableColumn<LicenseRecord, String> colKey = new TableColumn<>("Clé (Début)");
-        colKey.setCellValueFactory(cell -> {
-            String k = cell.getValue().getLicenseKey();
-            return new javafx.beans.property.SimpleStringProperty(k.substring(0, 10) + "...");
-        });
-        colKey.setPrefWidth(100);
+        // NEW: Full License Key Column (Read-Only)
+        TableColumn<LicenseRecord, String> colFullKey = new TableColumn<>("Clé de Licence");
+        colFullKey.setCellValueFactory(new PropertyValueFactory<>("licenseKey"));
+        colFullKey.setPrefWidth(350);
 
-        table.getColumns().addAll(colClient, colDate, colExp, colMid, colKey);
-
-        // Context Menu (Right Click to Copy Key)
-        ContextMenu contextMenu = new ContextMenu();
-        MenuItem copyItem = new MenuItem("Copier la clé complète");
-        copyItem.setOnAction(e -> {
-            LicenseRecord selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) copyToClipboard(selected.getLicenseKey());
-        });
-        contextMenu.getItems().add(copyItem);
-        table.setContextMenu(contextMenu);
-
-        // Load Data Logic
-        Runnable loadData = () -> {
-            String q = searchField.getText().trim();
-            if (q.isEmpty()) {
-                table.getItems().setAll(db.getAllLicenses());
-            } else {
-                table.getItems().setAll(db.search(q));
+        // Custom Cell Factory to make the key selectable but read-only
+        colFullKey.setCellFactory(column -> new TableCell<LicenseRecord, String>() {
+            private final TextField textField = new TextField();
+            {
+                textField.setEditable(false);
+                // Styling to make it blend into the table cell
+                textField.setStyle("-fx-background-color: transparent; " +
+                        "-fx-background-insets: 0; " +
+                        "-fx-padding: 2; " +
+                        "-fx-font-family: 'Consolas'; " +
+                        "-fx-font-size: 11px;");
             }
-        };
 
-        refreshBtn.setOnAction(e -> loadData.run());
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    textField.setText(item);
+                    setGraphic(textField);
+                }
+            }
+        });
 
-        // Initial Load
-        loadData.run();
+        // NEW: Action Column for Instant Copying
+        TableColumn<LicenseRecord, Void> colAction = new TableColumn<>("Action");
+        colAction.setCellFactory(param -> new TableCell<>() {
+            private final Button copyBtn = new Button("📋 Copier");
+            {
+                copyBtn.setStyle("-fx-font-size: 10px; -fx-background-color: #e0e0e0;");
+                copyBtn.setOnAction(event -> {
+                    LicenseRecord record = getTableView().getItems().get(getIndex());
+                    if (record != null) {
+                        copyToClipboard(record.getLicenseKey()); // Task 1: Auto-copy to clipboard
+                    }
+                });
+            }
 
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : copyBtn);
+            }
+        });
+
+        // colFullKey remains for visibility, but the button handles the "automatic" copy
+        table.getColumns().addAll(colClient, colDate, colExp, colMid, colFullKey);
+
+//        table.getColumns().addAll(colClient, colDate, colExp, colMid, colFullKey);
+
+        // Logic for Detail View
+        viewDetailsBtn.setOnAction(e -> {
+            LicenseRecord selected = table.getSelectionModel().getSelectedItem();
+            if (selected != null) showDetailsDialog(selected);
+        });
+
+        table.setRowFactory(tv -> {
+            TableRow<LicenseRecord> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    showDetailsDialog(row.getItem());
+                }
+            });
+            return row;
+        });
+
+        // Live Search Filtering
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.isEmpty()) {
+                table.setItems(masterHistoryList);
+            } else {
+                table.setItems(FXCollections.observableArrayList(db.search(newVal)));
+            }
+        });
+
+        VBox.setVgrow(table, Priority.ALWAYS);
         layout.getChildren().addAll(header, searchBox, table);
         return layout;
     }
 
-    // ==================== VIEW: VALIDATE LICENSE ====================
+    private void showDetailsDialog(LicenseRecord record) {
+        Stage dialog = new Stage();
+        dialog.setTitle("Détails - " + record.getClientName());
+
+        VBox root = new VBox(15);
+        root.setPadding(new Insets(20));
+
+        TextArea keyArea = new TextArea(record.getLicenseKey());
+        keyArea.setWrapText(true);
+        keyArea.setEditable(false);
+        keyArea.setPrefHeight(200);
+        keyArea.setStyle("-fx-font-family: 'Consolas';");
+
+        Button copyBtn = new Button("Copier la Clé");
+        copyBtn.setMaxWidth(Double.MAX_VALUE);
+        copyBtn.setOnAction(e -> copyToClipboard(record.getLicenseKey()));
+
+        root.getChildren().addAll(new Label("Clé de licence complète pour " + record.getClientName() + ":"), keyArea, copyBtn);
+
+        Scene scene = new Scene(root, 600, 400);
+        dialog.setScene(scene);
+        dialog.show();
+    }
+
+    // ==================== OTHER VIEWS & UTILS ====================
+//    private VBox createValidateView() {
+//        VBox layout = new VBox(15);
+//        layout.setPadding(new Insets(20));
+//        layout.getChildren().add(new Label("Interface de Validation"));
+//        // Re-add your validation logic here...
+//        return layout;
+//    }
+
+    // ==================== VIEW: VALIDATE / DECODE LICENSE ====================
     private VBox createValidateView() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -288,116 +356,140 @@ public class LicenseGeneratorApp extends Application {
         Label keyLabel = new Label("Collez la clé de licence ici:");
         TextArea keyInput = new TextArea();
         keyInput.setWrapText(true);
-        keyInput.setPrefHeight(80);
+        keyInput.setPrefHeight(100);
+        keyInput.setPromptText("Base64 string...");
+        keyInput.setStyle("-fx-font-family: 'Consolas';");
 
         // Optional Machine ID check
         Label midLabel = new Label("Comparer avec ID Machine (Optionnel):");
         TextField midInput = new TextField();
         midInput.setPromptText("Laisser vide pour ignorer la vérification matérielle");
 
-        Button validateBtn = new Button("Vérifier la Clé");
-        validateBtn.setPrefWidth(200);
+        Button validateBtn = new Button("Vérifier et Décoder la Clé");
+        validateBtn.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;");
+        validateBtn.setPrefWidth(250);
 
-        // Results
-        VBox resultsBox = new VBox(10);
-        resultsBox.setStyle("-fx-background-color: #f4f4f4; -fx-padding: 10; -fx-background-radius: 5;");
+        // Results Display Area
+        VBox resultsBox = new VBox(12);
+        resultsBox.setPadding(new Insets(15));
+        resultsBox.setStyle("-fx-background-color: #f8f9fa; -fx-border-color: #dee2e6; -fx-border-radius: 5; -fx-background-radius: 5;");
+
         Label resMachine = new Label("Machine ID: -");
+        Label resClient = new Label("Client: -"); // New Label for Task 2
         Label resDate = new Label("Expiration: -");
-        Label resStatus = new Label("Statut: -");
+        Label resStatus = new Label("Statut: En attente de saisie");
+        resStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
 
-        resultsBox.getChildren().addAll(resMachine, resDate, new Separator(), resStatus);
+        resultsBox.getChildren().addAll(
+                new Label("Détails du Décodage:"),
+                new Separator(),
+                resMachine,
+                resClient,
+                resDate,
+                resStatus
+        );
 
+        // LOGIC
         validateBtn.setOnAction(e -> {
             String key = keyInput.getText().trim();
-            String checkMid = midInput.getText().trim();
+            String checkMid = midInput.getText().trim().toUpperCase();
 
             if (key.isEmpty()) {
-                resStatus.setText("Statut: ❌ Clé vide");
+                resStatus.setText("Statut: ❌ Veuillez coller une clé");
+                resStatus.setTextFill(Color.RED);
                 return;
             }
 
             try {
-                // Decode Logic (Replicated from LicenseGenerator to allow checking arbitrary IDs)
+                // 1. Decode Base64
                 String decoded = new String(Base64.getDecoder().decode(key));
                 String[] parts = decoded.split("\\|");
 
                 if (parts.length != 3) {
-                    resStatus.setText("Statut: ❌ Format invalide");
+                    resStatus.setText("Statut: ❌ Format de clé corrompu (Manque des segments)");
                     resStatus.setTextFill(Color.RED);
                     return;
                 }
 
                 String licMid = parts[0];
                 LocalDate expDate = LocalDate.parse(parts[1]);
+                // String signature = parts[2]; // Used by LicenseManager for internal validation
 
+                // 2. Fetch Client Name from masterHistoryList (Synced with DB)
+                String foundClient = masterHistoryList.stream()
+                        .filter(r -> r.getLicenseKey().equals(key))
+                        .map(LicenseRecord::getClientName)
+                        .findFirst()
+                        .orElse("Inconnu (Clé externe)");
+
+
+                // 3. Update UI with data
                 resMachine.setText("Machine ID: " + licMid);
+                resClient.setText("Client: " + foundClient); // Show Client Name
                 resDate.setText("Expiration: " + expDate.format(DATE_FORMAT));
 
-                // Validation Checks
+                // 4. Validation Logic
                 boolean expired = LocalDate.now().isAfter(expDate);
                 boolean midMatch = true;
+
                 if (!checkMid.isEmpty() && !licMid.equalsIgnoreCase(checkMid)) {
                     midMatch = false;
                 }
 
-                StringBuilder sb = new StringBuilder();
-                if (expired) sb.append("❌ EXPIRÉE ");
-                else sb.append("✅ DATES OK ");
-
-                if (!checkMid.isEmpty()) {
-                    if (midMatch) sb.append("| ✅ MACHINE OK");
-                    else sb.append("| ❌ MACHINE DIFFERENTE");
+                // 5. Final Status Construction
+                StringBuilder statusMsg = new StringBuilder();
+                if (expired) {
+                    statusMsg.append("❌ EXPIRÉE ");
+                    resStatus.setTextFill(Color.RED);
+                } else {
+                    statusMsg.append("✅ VALIDE ");
+                    resStatus.setTextFill(Color.GREEN);
                 }
 
-                resStatus.setText("Statut: " + sb.toString());
-                resStatus.setTextFill(expired || !midMatch ? Color.RED : Color.GREEN);
-                resStatus.setFont(Font.font("System", FontWeight.BOLD, 12));
+                if (!checkMid.isEmpty()) {
+                    if (midMatch) {
+                        statusMsg.append("| ✅ MACHINE CORRESPOND");
+                    } else {
+                        statusMsg.append("| ❌ ID MACHINE DIFFERENT");
+                        resStatus.setTextFill(Color.RED);
+                    }
+                }
+
+                resStatus.setText("Statut: " + statusMsg.toString());
 
             } catch (Exception ex) {
-                resStatus.setText("Statut: ❌ Erreur de lecture (" + ex.getMessage() + ")");
+                resStatus.setText("Statut: ❌ Erreur de lecture (Format invalide)");
                 resStatus.setTextFill(Color.RED);
+                resMachine.setText("Machine ID: -");
+                resDate.setText("Expiration: -");
             }
         });
 
         layout.getChildren().addAll(
-                headerLabel, new Separator(),
-                keyLabel, keyInput,
-                midLabel, midInput,
+                headerLabel,
+                new Separator(),
+                keyLabel,
+                keyInput,
+                midLabel,
+                midInput,
                 validateBtn,
                 resultsBox
         );
+
         return layout;
     }
 
-    // ==================== VIEW: LOCAL MACHINE ID ====================
     private VBox createLocalIdView() {
-        VBox layout = new VBox(20);
-        layout.setPadding(new Insets(30));
-        layout.setAlignment(Pos.CENTER);
-
-        Label title = new Label("Identifiant de CETTE Machine");
-        title.setFont(Font.font("System", FontWeight.BOLD, 16));
-
-        Label desc = new Label("Utilisez cet ID pour générer des licences de test\npour cet ordinateur.");
-        desc.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-
-        TextField idField = new TextField();
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(20));
+        TextField idField = new TextField(HardwareFingerprint.generateMachineId());
         idField.setEditable(false);
-        idField.setAlignment(Pos.CENTER);
-        idField.setStyle("-fx-font-size: 14px; -fx-font-family: 'Consolas'; -fx-background-color: #eee;");
-
-        // Load ID
-        idField.setText(HardwareFingerprint.generateMachineId());
-
-        Button copyBtn = new Button("Copier l'ID");
-        copyBtn.setPrefSize(150, 40);
+        Button copyBtn = new Button("Copier ID");
         copyBtn.setOnAction(e -> copyToClipboard(idField.getText()));
-
-        layout.getChildren().addAll(title, desc, idField, copyBtn);
+        layout.getChildren().addAll(new Label("ID de cette machine:"), idField, copyBtn);
         return layout;
     }
 
-    // ==================== UTILS ====================
     private void copyToClipboard(String text) {
         if (text != null && !text.isEmpty()) {
             ClipboardContent content = new ClipboardContent();

@@ -32,23 +32,32 @@ public class LicenseDatabase {
         }
     }
 
-    public void addLicense(String clientName, String machineId, String key, LocalDate expDate) {
+    // Update this method in LicenseDatabase.java
+    public LicenseRecord addLicense(String clientName, String machineId, String key, LocalDate expDate) {
         String sql = "INSERT INTO licenses(client_name, machine_id, license_key, gen_date, exp_date, status) VALUES(?,?,?,?,?,?)";
+        LocalDate now = LocalDate.now();
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, clientName);
             pstmt.setString(2, machineId);
             pstmt.setString(3, key);
-            pstmt.setString(4, LocalDate.now().toString());
+            pstmt.setString(4, now.toString());
             pstmt.setString(5, expDate.toString());
             pstmt.setString(6, "ACTIVE");
             pstmt.executeUpdate();
 
+            // Get the generated ID to create a valid record object
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return new LicenseRecord(generatedKeys.getInt(1), clientName, machineId, key, now, expDate, "ACTIVE");
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     public List<LicenseRecord> getAllLicenses() {
