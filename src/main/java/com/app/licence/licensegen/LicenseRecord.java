@@ -13,9 +13,10 @@ public class LicenseRecord {
     private LocalDate generationDate;
     private LocalDate expirationDate;
     private String status; // "ACTIVE", "EXPIRED", "REVOKED"
+    private String role; // NEW FIELD
 
     public LicenseRecord(int id, String clientName, String machineId, String licenseKey,
-                         LocalDate generationDate, LocalDate expirationDate, String status) {
+                         LocalDate generationDate, LocalDate expirationDate, String status, String role) {
         this.id = id;
         this.clientName = clientName;
         this.machineId = machineId;
@@ -23,6 +24,7 @@ public class LicenseRecord {
         this.generationDate = generationDate;
         this.expirationDate = expirationDate;
         this.status = status;
+        this.role = role;
     }
 
     // Getters are required for JavaFX TableView PropertyValueFactory
@@ -33,4 +35,5 @@ public class LicenseRecord {
     public LocalDate getGenerationDate() { return generationDate; }
     public LocalDate getExpirationDate() { return expirationDate; }
     public String getStatus() { return status; }
+    public String getRole() { return role; }
 }

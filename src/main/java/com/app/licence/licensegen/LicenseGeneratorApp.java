@@ -61,6 +61,72 @@ public class LicenseGeneratorApp extends Application {
     }
 
     // ==================== VIEW: GENERATE LICENSE ====================
+//    private VBox createGenerateView() {
+//        VBox layout = new VBox(15);
+//        layout.setPadding(new Insets(20));
+//
+//        Label headerLabel = new Label("Générer une nouvelle clé");
+//        headerLabel.setFont(Font.font("System", FontWeight.BOLD, 18));
+//
+//        Label clientLabel = new Label("Nom du Client / Référence:");
+//        TextField clientField = new TextField();
+//
+//        Label idLabel = new Label("ID Machine du Client (32 caractères):");
+//        TextField machineIdField = new TextField();
+//        machineIdField.setStyle("-fx-font-family: 'Consolas';");
+//
+//        Label durationLabel = new Label("Durée de validité:");
+//        ComboBox<String> durationBox = new ComboBox<>();
+//        durationBox.getItems().addAll("30 Jours", "90 Jours", "365 Jours", "3650 Jours (10 Ans)", "Personnalisé");
+//        durationBox.getSelectionModel().select(2);
+//
+//        Button generateBtn = new Button("Générer la Clé");
+//        generateBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;");
+//
+//        TextArea resultArea = new TextArea();
+//        resultArea.setEditable(false);
+//        resultArea.setPrefHeight(100);
+//
+//        Label statusLabel = new Label("");
+//
+//        generateBtn.setOnAction(e -> {
+//            String clientName = clientField.getText().trim();
+//            String mid = machineIdField.getText().trim().toUpperCase();
+//
+//            if (clientName.isEmpty() || mid.isEmpty()) {
+//                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs.");
+//                return;
+//            }
+//
+//            int days = 365; // Default logic simplified for brevity
+//            LocalDate expDate = LocalDate.now().plusDays(days);
+//
+//            try {
+//                String key = LicenseManager.generateLicenseKey(mid, expDate);
+//
+//                // 1. SAVE TO DATABASE
+//                LicenseRecord newRecord = db.addLicense(clientName, mid, key, expDate);
+//
+//                // 2. INSTANT REFRESH: Add to the observable list
+//                if (newRecord != null) {
+//                    masterHistoryList.add(0, newRecord);
+//                }
+//
+//                resultArea.setText(key);
+//                statusLabel.setText("✅ Succès! Enregistré dans l'historique.");
+//                statusLabel.setTextFill(Color.GREEN);
+//            } catch (Exception ex) {
+//                showAlert(Alert.AlertType.ERROR, "Erreur", "Echec: " + ex.getMessage());
+//            }
+//        });
+//
+//        layout.getChildren().addAll(headerLabel, new Separator(), clientLabel, clientField, idLabel, machineIdField, durationLabel, durationBox, generateBtn, statusLabel, resultArea);
+//        return layout;
+//    }
+
+
+    // In LicenseGeneratorApp.java inside createGenerateView()
+
     private VBox createGenerateView() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -75,10 +141,33 @@ public class LicenseGeneratorApp extends Application {
         TextField machineIdField = new TextField();
         machineIdField.setStyle("-fx-font-family: 'Consolas';");
 
+        // 1. ADD ROLE SELECTOR
+        Label roleLabel = new Label("Type de Licence (Privilèges):");
+        ComboBox<String> roleBox = new ComboBox<>();
+        roleBox.getItems().addAll("Utilisateur Standard", "Administrateur");
+        roleBox.getSelectionModel().select(0); // Default to User
+
+        // 2. Duration Selector (Existing code)
         Label durationLabel = new Label("Durée de validité:");
         ComboBox<String> durationBox = new ComboBox<>();
-        durationBox.getItems().addAll("30 Jours", "90 Jours", "365 Jours", "3650 Jours (10 Ans)", "Personnalisé");
-        durationBox.getSelectionModel().select(2);
+        durationBox.getItems().addAll("15 Jours", "30 Jours", "90 Jours", "365 Jours", "3650 Jours (10 Ans)", "Personnalisé");
+        durationBox.getSelectionModel().select(3); // Select 365 days by default
+
+        // 2. ADD Custom Days Input Field (Hidden by default)
+        HBox customDaysBox = new HBox(10);
+        Label customDaysLabel = new Label("Nombre de jours:");
+        TextField customDaysField = new TextField();
+        customDaysField.setPromptText("Ex: 7");
+        customDaysBox.getChildren().addAll(customDaysLabel, customDaysField);
+        customDaysBox.setVisible(false);
+        customDaysBox.setManaged(false); // Don't take up space when hidden
+
+        // Logic to show/hide custom field
+        durationBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isCustom = "Personnalisé".equals(newVal);
+            customDaysBox.setVisible(isCustom);
+            customDaysBox.setManaged(isCustom);
+        });
 
         Button generateBtn = new Button("Générer la Clé");
         generateBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -93,34 +182,66 @@ public class LicenseGeneratorApp extends Application {
             String clientName = clientField.getText().trim();
             String mid = machineIdField.getText().trim().toUpperCase();
 
+            // Map ComboBox selection to code
+            String selectedRole = roleBox.getSelectionModel().getSelectedIndex() == 1 ? "ADMIN" : "USER";
+
             if (clientName.isEmpty() || mid.isEmpty()) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs.");
                 return;
             }
 
-            int days = 365; // Default logic simplified for brevity
+            // 3. LOGIC to determine Days and Status
+            int days = 0;
+            String selection = durationBox.getValue();
+
+            try {
+                if (selection.startsWith("15")) days = 15;
+                else if (selection.startsWith("30")) days = 30;
+                else if (selection.startsWith("90")) days = 90;
+                else if (selection.startsWith("3650")) days = 3650;
+                else if (selection.startsWith("365")) days = 365;
+                else if (selection.equals("Personnalisé")) {
+                    // Parse custom field
+                    days = Integer.parseInt(customDaysField.getText().trim());
+                    if (days <= 0) throw new NumberFormatException();
+                }
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer un nombre de jours valide.");
+                return;
+            }
+
+            // Determine Status based on your rule: <= 30 is ESSAI (Trial)
+            String licenseStatus = (days <= 30) ? "ESSAI" : "ACTIVE";
+
             LocalDate expDate = LocalDate.now().plusDays(days);
 
             try {
-                String key = LicenseManager.generateLicenseKey(mid, expDate);
+//                String key = LicenseManager.generateLicenseKey(mid, expDate);
 
-                // 1. SAVE TO DATABASE
-                LicenseRecord newRecord = db.addLicense(clientName, mid, key, expDate);
+                // 3. GENERATE KEY WITH ROLE
+                String key = LicenseManager.generateLicenseKey(mid, expDate, selectedRole);
 
-                // 2. INSTANT REFRESH: Add to the observable list
+//                // Update DB
+//                db.addLicense(clientName, mid, key, expDate, licenseStatus);
+
+                // 4. Update DB Call to include status
+                LicenseRecord newRecord = db.addLicense(clientName, mid, key, expDate, licenseStatus, selectedRole);
+
                 if (newRecord != null) {
-                    masterHistoryList.add(0, newRecord);
+                    masterHistoryList.addFirst(newRecord);
                 }
 
                 resultArea.setText(key);
-                statusLabel.setText("✅ Succès! Enregistré dans l'historique.");
+                statusLabel.setText("✅ Succès! Licence (" + licenseStatus + ") générée pour " + days + " jours.");
                 statusLabel.setTextFill(Color.GREEN);
             } catch (Exception ex) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Echec: " + ex.getMessage());
             }
         });
 
-        layout.getChildren().addAll(headerLabel, new Separator(), clientLabel, clientField, idLabel, machineIdField, durationLabel, durationBox, generateBtn, statusLabel, resultArea);
+        // Add customDaysBox to the layout children
+        layout.getChildren().addAll(headerLabel, new Separator(), clientLabel, clientField, idLabel, machineIdField, roleLabel, roleBox, durationLabel, durationBox, customDaysBox, generateBtn, statusLabel, resultArea);
+//        layout.getChildren().addAll(headerLabel, new Separator(), clientLabel, clientField, idLabel, machineIdField, roleLabel, roleBox, durationLabel, durationBox, generateBtn, statusLabel, resultArea);
         return layout;
     }
 
@@ -215,6 +336,29 @@ public class LicenseGeneratorApp extends Application {
         colClient.setCellValueFactory(new PropertyValueFactory<>("clientName"));
         colClient.setPrefWidth(120);
 
+        // NEW: Role Column
+        TableColumn<LicenseRecord, String> colRole = new TableColumn<>("Type");
+        colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+        colRole.setPrefWidth(80);
+        colRole.setStyle("-fx-alignment: CENTER;");
+        colRole.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    if ("ADMIN".equals(item)) {
+                        setStyle("-fx-text-fill: white; -fx-background-color: #E74C3C; -fx-alignment: CENTER; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-text-fill: black; -fx-background-color: #AED6F1; -fx-alignment: CENTER;");
+                    }
+                }
+            }
+        });
+
         TableColumn<LicenseRecord, String> colDate = new TableColumn<>("Généré le");
         colDate.setCellValueFactory(new PropertyValueFactory<>("generationDate"));
 
@@ -277,7 +421,7 @@ public class LicenseGeneratorApp extends Application {
         });
 
         // colFullKey remains for visibility, but the button handles the "automatic" copy
-        table.getColumns().addAll(colClient, colDate, colExp, colMid, colFullKey);
+        table.getColumns().addAll(colClient, colRole, colDate, colExp, colMid, colFullKey);
 
 //        table.getColumns().addAll(colClient, colDate, colExp, colMid, colFullKey);
 
@@ -376,6 +520,7 @@ public class LicenseGeneratorApp extends Application {
 
         Label resMachine = new Label("Machine ID: -");
         Label resClient = new Label("Client: -"); // New Label for Task 2
+        Label resRole = new Label("Type: -"); // NEW LABEL
         Label resDate = new Label("Expiration: -");
         Label resStatus = new Label("Statut: En attente de saisie");
         resStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
@@ -385,6 +530,7 @@ public class LicenseGeneratorApp extends Application {
                 new Separator(),
                 resMachine,
                 resClient,
+                resRole,
                 resDate,
                 resStatus
         );
@@ -405,15 +551,31 @@ public class LicenseGeneratorApp extends Application {
                 String decoded = new String(Base64.getDecoder().decode(key));
                 String[] parts = decoded.split("\\|");
 
-                if (parts.length != 3) {
-                    resStatus.setText("Statut: ❌ Format de clé corrompu (Manque des segments)");
-                    resStatus.setTextFill(Color.RED);
-                    return;
-                }
+//                if (parts.length != 3) {
+//                    resStatus.setText("Statut: ❌ Format de clé corrompu (Manque des segments)");
+//                    resStatus.setTextFill(Color.RED);
+//                    return;
+//                }
 
-                String licMid = parts[0];
-                LocalDate expDate = LocalDate.parse(parts[1]);
+//                String licMid = parts[0];
+//                LocalDate expDate = LocalDate.parse(parts[1]);
+                String licMid, roleStr;
+                LocalDate expirationDate;
                 // String signature = parts[2]; // Used by LicenseManager for internal validation
+
+                // Handle both Old (3 parts) and New (4 parts) formats
+                if (parts.length == 4) {
+                    licMid = parts[0];
+                    expirationDate = LocalDate.parse(parts[1]);
+                    roleStr = parts[2];
+                    // parts[3] is signature
+                } else if (parts.length == 3) {
+                    licMid = parts[0];
+                    expirationDate = LocalDate.parse(parts[1]);
+                    roleStr = "USER (Legacy)";
+                } else {
+                    throw new IllegalArgumentException("Invalid Format");
+                }
 
                 // 2. Fetch Client Name from masterHistoryList (Synced with DB)
                 String foundClient = masterHistoryList.stream()
@@ -426,10 +588,11 @@ public class LicenseGeneratorApp extends Application {
                 // 3. Update UI with data
                 resMachine.setText("Machine ID: " + licMid);
                 resClient.setText("Client: " + foundClient); // Show Client Name
-                resDate.setText("Expiration: " + expDate.format(DATE_FORMAT));
+                resDate.setText("Expiration: " + expirationDate.format(DATE_FORMAT));
+                resRole.setText("Type: " + roleStr); // Show Role
 
                 // 4. Validation Logic
-                boolean expired = LocalDate.now().isAfter(expDate);
+                boolean expired = LocalDate.now().isAfter(expirationDate);
                 boolean midMatch = true;
 
                 if (!checkMid.isEmpty() && !licMid.equalsIgnoreCase(checkMid)) {
