@@ -1,0 +1,238 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 260046848 bytes for G1 virtual space
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   The process is running with CompressedOops enabled, and the Java Heap may be blocking the growth of the native heap
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+#   JVM is running with Zero Based Compressed Oops mode in which the Java heap is
+#     placed in the first 32GB address space. The Java Heap base address is the
+#     maximum limit for the native heap growth. Please use -XX:HeapBaseMinAddress
+#     to set the Java Heap base and to place the Java Heap above 32GB virtual address.
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_windows.cpp:3600), pid=12640, tid=37340
+#
+# JRE version:  (21.0.5+9) (build )
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (21.0.5+9-LTS-239, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)
+# No core dump will be written. Minidumps are not enabled by default on client versions of Windows
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:42819,suspend=y,server=n -agentpath:C:\Users\Houcine\AppData\Local\Temp\idea_libasyncProfiler_dll_temp_folder\libasyncProfiler.dll=version,jfr,event=wall,interval=10ms,cstack=no,file=C:\Users\Houcine\IdeaSnapshots\Launcher_2025_12_16_014537.jfr,dbghelppath=C:\Users\Houcine\AppData\Local\Temp\idea_dbghelp_dll_temp_folder\dbghelp.dll,log=C:\Users\Houcine\AppData\Local\Temp\Launcher_2025_12_16_014537.jfr.log.txt,logLevel=DEBUG -javaagent:C:\Users\Houcine\AppData\Local\JetBrains\IntelliJIdea2024.3\captureAgent\debugger-agent.jar -Dkotlinx.coroutines.debug.enable.creation.stack.trace=false -Ddebugger.agent.enable.coroutines=true -Dkotlinx.coroutines.debug.enable.flows.stack.trace=true -Dkotlinx.coroutines.debug.enable.mutable.state.flows.stack.trace=true -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 --module-path=C:\Users\Houcine\hooke-electronics\LicenseGen\target\classes;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-controls\21\javafx-controls-21-win.jar;C:\Users\Houcine\.m2\repository\org\xerial\sqlite-jdbc\3.42.0.0\sqlite-jdbc-3.42.0.0.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-graphics\21\javafx-graphics-21-win.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-fxml\21\javafx-fxml-21-win.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-base\21\javafx-base-21-win.jar -Djdk.module.main=com.app.licence.licensegen com.app.licence.licensegen/com.app.licence.licensegen.Launcher
+
+Host: AMD Ryzen 7 4800H with Radeon Graphics         , 16 cores, 15G,  Windows 11 , 64 bit Build 26100 (10.0.26100.7309)
+Time: Tue Dec 16 01:45:37 2025 Romance Standard Time elapsed time: 0.021591 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000025252221e20):  JavaThread "Unknown thread" [_thread_in_vm, id=37340, stack(0x0000007052500000,0x0000007052600000) (1024K)]
+
+Stack: [0x0000007052500000,0x0000007052600000]
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [jvm.dll+0x6ca289]
+V  [jvm.dll+0x854a51]
+V  [jvm.dll+0x856f7e]
+V  [jvm.dll+0x857653]
+V  [jvm.dll+0x27dd26]
+V  [jvm.dll+0x6c6a25]
+V  [jvm.dll+0x6bb5aa]
+V  [jvm.dll+0x35359a]
+V  [jvm.dll+0x35b1f6]
+V  [jvm.dll+0x3adade]
+V  [jvm.dll+0x3add88]
+V  [jvm.dll+0x3278fc]
+V  [jvm.dll+0x32845b]
+V  [jvm.dll+0x81de19]
+V  [jvm.dll+0x3ba7c1]
+V  [jvm.dll+0x807168]
+V  [jvm.dll+0x44f96e]
+V  [jvm.dll+0x451561]
+C  [jli.dll+0x52a3]
+C  [ucrtbase.dll+0x37b0]
+C  [KERNEL32.DLL+0x2e8d7]
+C  [ntdll.dll+0x8c53c]
+
+
+---------------  P R O C E S S  ---------------
+
+Threads class SMR info:
+_java_thread_list=0x00007ffdb078ac08, length=0, elements={
+}
+
+Java Threads: ( => current thread )
+Total: 0
+
+Other Threads:
+  0x0000025251ca08d0 WorkerThread "GC Thread#0"                     [id=32332, stack(0x0000007052600000,0x0000007052700000) (1024K)]
+  0x0000025251cb1080 ConcurrentGCThread "G1 Main Marker"            [id=40444, stack(0x0000007052700000,0x0000007052800000) (1024K)]
+  0x0000025251cb5790 WorkerThread "G1 Conc#0"                       [id=36756, stack(0x0000007052800000,0x0000007052900000) (1024K)]
+
+[error occurred during error reporting (printing all threads), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffdafefa087]
+VM state: not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00007ffdb07fbf98] Heap_lock - owner thread: 0x0000025252221e20
+
+Heap address: 0x0000000709400000, size: 3948 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+
+CDS archive(s) mapped at: [0x0000000000000000-0x0000000000000000-0x0000000000000000), size 0, SharedBaseAddress: 0x0000000800000000, ArchiveRelocationMode: 1.
+Narrow klass base: 0x0000000000000000, Narrow klass shift: 0, Narrow klass range: 0x0
+
+GC Precious Log:
+ CardTable entry size: 512
+ Card Set container configuration: InlinePtr #cards 4 size 8 Array Of Cards #cards 16 size 48 Howl #buckets 8 coarsen threshold 3686 Howl Bitmap #cards 512 size 80 coarsen threshold 460 Card regions per heap region 1 cards per card region 4096
+
+Heap:
+ garbage-first heap   total 0K, used 0K [0x0000000709400000, 0x0000000800000000)
+  region size 2048K, 0 young (0K), 0 survivors (0K)
+
+[error occurred during error reporting (printing heap information), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffdb02e3259]
+GC Heap History (0 events):
+No events
+
+Dll operation events (2 events):
+Event: 0.017 Loaded shared library C:\Program Files\Java\jdk-21\bin\java.dll
+Event: 0.017 Loaded shared library C:\Program Files\Java\jdk-21\bin\zip.dll
+
+Deoptimization events (0 events):
+No events
+
+Classes loaded (0 events):
+No events
+
+Classes unloaded (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+ZGC Phase Switch (0 events):
+No events
+
+VM Operations (0 events):
+No events
+
+Events (0 events):
+No events
+
+
+Dynamic libraries:
+0x00007ff72caa0000 - 0x00007ff72cab0000 	C:\Program Files\Java\jdk-21\bin\java.exe
+0x00007ffdd8c80000 - 0x00007ffdd8ee7000 	C:\Windows\SYSTEM32\ntdll.dll
+0x00007ffdd7590000 - 0x00007ffdd7659000 	C:\Windows\System32\KERNEL32.DLL
+0x00007ffdd6330000 - 0x00007ffdd671f000 	C:\Windows\System32\KERNELBASE.dll
+0x00007ffdd61e0000 - 0x00007ffdd632b000 	C:\Windows\System32\ucrtbase.dll
+0x00007ffdb0a20000 - 0x00007ffdb0a3b000 	C:\Program Files\Java\jdk-21\bin\VCRUNTIME140.dll
+0x00007ffdb0a00000 - 0x00007ffdb0a19000 	C:\Program Files\Java\jdk-21\bin\jli.dll
+0x00007ffdd7890000 - 0x00007ffdd7944000 	C:\Windows\System32\ADVAPI32.dll
+0x00007ffdd70a0000 - 0x00007ffdd7149000 	C:\Windows\System32\msvcrt.dll
+0x00007ffdd7460000 - 0x00007ffdd7506000 	C:\Windows\System32\sechost.dll
+0x00007ffdd8b20000 - 0x00007ffdd8c38000 	C:\Windows\System32\RPCRT4.dll
+0x00007ffdd7290000 - 0x00007ffdd7455000 	C:\Windows\System32\USER32.dll
+0x00007ffdd67c0000 - 0x00007ffdd67e7000 	C:\Windows\System32\win32u.dll
+0x00007ffdc0820000 - 0x00007ffdc0ab3000 	C:\Windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.7309_none_3e05feeae336a044\COMCTL32.dll
+0x00007ffdd8180000 - 0x00007ffdd81ab000 	C:\Windows\System32\GDI32.dll
+0x00007ffdd60b0000 - 0x00007ffdd61dc000 	C:\Windows\System32\gdi32full.dll
+0x00007ffdd5dd0000 - 0x00007ffdd5e73000 	C:\Windows\System32\msvcp_win.dll
+0x00007ffdcbc20000 - 0x00007ffdcbc2b000 	C:\Windows\SYSTEM32\VERSION.dll
+0x00007ffdd7fb0000 - 0x00007ffdd7fe1000 	C:\Windows\System32\IMM32.DLL
+0x00007ffdb2cf0000 - 0x00007ffdb2cfc000 	C:\Program Files\Java\jdk-21\bin\vcruntime140_1.dll
+0x00007ffdb0910000 - 0x00007ffdb099e000 	C:\Program Files\Java\jdk-21\bin\msvcp140.dll
+0x00007ffdafbc0000 - 0x00007ffdb08d8000 	C:\Program Files\Java\jdk-21\bin\server\jvm.dll
+0x00007ffdd7510000 - 0x00007ffdd7584000 	C:\Windows\System32\WS2_32.dll
+0x00007ffdd5c30000 - 0x00007ffdd5c8e000 	C:\Windows\SYSTEM32\POWRPROF.dll
+0x00007ffdcbbe0000 - 0x00007ffdcbc15000 	C:\Windows\SYSTEM32\WINMM.dll
+0x00007ffdd5c10000 - 0x00007ffdd5c24000 	C:\Windows\SYSTEM32\UMPDC.dll
+0x00007ffdd4b40000 - 0x00007ffdd4b5b000 	C:\Windows\SYSTEM32\kernel.appcore.dll
+0x00007ffdafbb0000 - 0x00007ffdafbba000 	C:\Program Files\Java\jdk-21\bin\jimage.dll
+0x00007ffdd3510000 - 0x00007ffdd3752000 	C:\Windows\SYSTEM32\DBGHELP.DLL
+0x00007ffdd7a40000 - 0x00007ffdd7dc5000 	C:\Windows\System32\combase.dll
+0x00007ffdd7950000 - 0x00007ffdd7a26000 	C:\Windows\System32\OLEAUT32.dll
+0x00007ffdc2bc0000 - 0x00007ffdc2bfc000 	C:\Windows\SYSTEM32\dbgcore.DLL
+0x00007ffdd6000000 - 0x00007ffdd60a5000 	C:\Windows\System32\bcryptPrimitives.dll
+0x00007ffdb2df0000 - 0x00007ffdb2e2c000 	C:\Program Files\Java\jdk-21\bin\jdwp.dll
+0x00007ffd420c0000 - 0x00007ffd422ce000 	C:\Users\Houcine\AppData\Local\Temp\idea_libasyncProfiler_dll_temp_folder\libasyncProfiler.dll
+0x00007ffdd09c0000 - 0x00007ffdd09cf000 	C:\Program Files\Java\jdk-21\bin\instrument.dll
+0x00007ffdaf500000 - 0x00007ffdaf51f000 	C:\Program Files\Java\jdk-21\bin\java.dll
+0x00007ffdadf60000 - 0x00007ffdadf78000 	C:\Program Files\Java\jdk-21\bin\zip.dll
+
+dbghelp: loaded successfully - version: 4.0.5 - missing functions: none
+symbol engine: initialized successfully - sym options: 0x614 - pdb path: .;C:\Program Files\Java\jdk-21\bin;C:\Windows\SYSTEM32;C:\Windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.7309_none_3e05feeae336a044;C:\Program Files\Java\jdk-21\bin\server;C:\Users\Houcine\AppData\Local\Temp\idea_libasyncProfiler_dll_temp_folder
+
+VM Arguments:
+jvm_args: -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:42819,suspend=y,server=n -agentpath:C:\Users\Houcine\AppData\Local\Temp\idea_libasyncProfiler_dll_temp_folder\libasyncProfiler.dll=version,jfr,event=wall,interval=10ms,cstack=no,file=C:\Users\Houcine\IdeaSnapshots\Launcher_2025_12_16_014537.jfr,dbghelppath=C:\Users\Houcine\AppData\Local\Temp\idea_dbghelp_dll_temp_folder\dbghelp.dll,log=C:\Users\Houcine\AppData\Local\Temp\Launcher_2025_12_16_014537.jfr.log.txt,logLevel=DEBUG -javaagent:C:\Users\Houcine\AppData\Local\JetBrains\IntelliJIdea2024.3\captureAgent\debugger-agent.jar -Dkotlinx.coroutines.debug.enable.creation.stack.trace=false -Ddebugger.agent.enable.coroutines=true -Dkotlinx.coroutines.debug.enable.flows.stack.trace=true -Dkotlinx.coroutines.debug.enable.mutable.state.flows.stack.trace=true -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 --module-path=C:\Users\Houcine\hooke-electronics\LicenseGen\target\classes;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-controls\21\javafx-controls-21-win.jar;C:\Users\Houcine\.m2\repository\org\xerial\sqlite-jdbc\3.42.0.0\sqlite-jdbc-3.42.0.0.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-graphics\21\javafx-graphics-21-win.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-fxml\21\javafx-fxml-21-win.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-base\21\javafx-base-21-win.jar -Djdk.module.main=com.app.licence.licensegen 
+java_command: com.app.licence.licensegen/com.app.licence.licensegen.Launcher
+java_class_path (initial): C:\Users\Houcine\.m2\repository\org\openjfx\javafx-controls\21\javafx-controls-21.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-graphics\21\javafx-graphics-21.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-base\21\javafx-base-21.jar;C:\Users\Houcine\.m2\repository\org\openjfx\javafx-fxml\21\javafx-fxml-21.jar;C:\Program Files\JetBrains\IntelliJ IDEA 2024.3\lib\idea_rt.jar
+Launcher Type: SUN_STANDARD
+
+[Global flags]
+     intx CICompilerCount                          = 12                                        {product} {ergonomic}
+     uint ConcGCThreads                            = 3                                         {product} {ergonomic}
+     uint G1ConcRefinementThreads                  = 13                                        {product} {ergonomic}
+   size_t G1HeapRegionSize                         = 2097152                                   {product} {ergonomic}
+    uintx GCDrainStackTargetSize                   = 64                                        {product} {ergonomic}
+   size_t InitialHeapSize                          = 260046848                                 {product} {ergonomic}
+   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
+   size_t MaxHeapSize                              = 4139778048                                {product} {ergonomic}
+   size_t MinHeapDeltaBytes                        = 2097152                                   {product} {ergonomic}
+   size_t MinHeapSize                              = 8388608                                   {product} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 7602480                                {pd product} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122027880                              {pd product} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122027880                              {pd product} {ergonomic}
+    uintx ReservedCodeCacheSize                    = 251658240                              {pd product} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+   size_t SoftMaxHeapSize                          = 4139778048                             {manageable} {ergonomic}
+     bool UseCompressedOops                        = true                           {product lp64_product} {ergonomic}
+     bool UseG1GC                                  = true                                      {product} {ergonomic}
+     bool UseLargePagesIndividualAllocation        = false                                  {pd product} {ergonomic}
+
+Logging:
+Log output configuration:
+ #0: stdout all=warning uptime,level,tags foldmultilines=false
+ #1: stderr all=off uptime,level,tags foldmultilines=false
+
+Environment Variables:
+JAVA_HOME=C:\Program Files\Java\jdk-21
+PATH=C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\libnvvp;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\Nsight Compute 2024.3.2\;C:\Program Files\Git\cmd;C:\Program Files\CMake\bin;C:\Program Files\MiKTeX\miktex\bin\x64\;C:\flutter\bin;C:\Program Files\Tesseract-OCR;C:\Users\Houcine\AppData\Local\Programs\Python\Python312\Scripts\;C:\Users\Houcine\AppData\Local\Programs\Python\Python312\;C:\php8;C:\ProgramData\ComposerSetup\bin;C:\Program Files\Java\jdk-21\bin;C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR;c:\Users\Houcine\AppData\Local\Programs\cursor\resources\app\bin;c:\Users\Houcine\AppData\Local\Programs\cursor\resources\app\bin;C:\Program Files\WiX Toolset v6.0\bin\;C:\Program Files\WiX Toolset v6.0\bin;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Users\Houcine\AppData\Local\Programs\Microsoft VS Code;;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\\..\extras\CUPTI\lib64;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\libnvvp;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\Nsight Compute 2024.3.2\;C:\Program Files\Git\cmd;C:\Program Files\CMake\bin;C:\Program Files\MiKTeX\miktex\bin\x64\;C:\flutter\bin;C:\Program Files\Tesseract-OCR;C:\Users\Houcine\AppData\Local\Programs\Python\Python312\Scripts\;C:\Users\Houcine\AppData\Local\Programs\Python\Python312\;C:\php8;C:\ProgramData\ComposerSetup\bin;C:\Program Files\Java\jdk-21\bin;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR;C:\Users\Houcine\AppData\Local\Programs\Microsoft VS Code;;C:\Users\Houcine\AppData\Local\Programs\Ollama;C:\Users\Houcine\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\Houcine\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Houcine\AppData\Local\Programs\Antigravity\bin
+USERNAME=Houcine
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=AMD64 Family 23 Model 96 Stepping 1, AuthenticAMD
+TMP=C:\Users\Houcine\AppData\Local\Temp
+TEMP=C:\Users\Houcine\AppData\Local\Temp
+
+
+
+
+Periodic native trim disabled
+
+---------------  S Y S T E M  ---------------
+
+OS:
+ Windows 11 , 64 bit Build 26100 (10.0.26100.7309)
+OS uptime: 1 days 12:50 hours
+Hyper-V role detected
+
+CPU: total 16 (initial active 16) (16 cores per cpu, 2 threads per core) family 23 model 96 stepping 1 microcode 0x8600106, cx8, cmov, fxsr, ht, mmx, 3dnowpref, sse, sse2, sse3, ssse3, sse4a, sse4.1, sse4.2, popcnt, lzcnt, tsc, tscinvbit, avx, avx2, aes, clmul, bmi1, bmi2, adx, sha, fma, vzeroupper, clflush, clflushopt, hv, rdtscp, rdpid, f16c
+Processor Information for all 16 processors :
+  Max Mhz: 2901, Current Mhz: 2901, Mhz Limit: 2901
+
+Memory: 4k page, system-wide physical 15791M (2642M free)
+TotalPageFile size 55136M (AvailPageFile size 207M)
+current process WorkingSet (physical memory assigned to process): 14M, peak: 14M
+current process commit charge ("private bytes"): 82M, peak: 330M
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (21.0.5+9-LTS-239) for windows-amd64 JRE (21.0.5+9-LTS-239), built on 2024-09-30T05:17:38Z by "mach5one" with MS VC++ 17.6 (VS2022)
+
+END.

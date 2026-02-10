@@ -83,7 +83,8 @@ public class LicenseGenerator {
         }
 
         if (machineId.length() != 32) {
-            System.out.println("⚠️  Attention: L'ID Machine devrait faire 32 caractères (actuellement: " + machineId.length() + ")");
+            System.out.println("⚠️  Attention: L'ID Machine devrait faire 32 caractères (actuellement: "
+                    + machineId.length() + ")");
             System.out.print("Continuer quand même? [o/N]: ");
             if (!scanner.nextLine().trim().toLowerCase().startsWith("o")) {
                 return;
@@ -181,22 +182,38 @@ public class LicenseGenerator {
             String decoded = new String(java.util.Base64.getDecoder().decode(licenseKey));
             String[] parts = decoded.split("\\|");
 
-            if (parts.length != 3) {
-                System.out.println("\n❌ Format de clé invalide.");
+            String licensedMachineId;
+            LocalDate expirationDate;
+            String role = "USER";
+
+            if (parts.length == 4) {
+                // New Format: ID | Date | Role | Signature
+                licensedMachineId = parts[0];
+                expirationDate = LocalDate.parse(parts[1]);
+                role = parts[2];
+            } else if (parts.length == 3) {
+                // Legacy Format: ID | Date | Signature
+                licensedMachineId = parts[0];
+                expirationDate = LocalDate.parse(parts[1]);
+            } else {
+                System.out.println("\n❌ Format de clé invalide (" + parts.length + " parties, attendu 3 ou 4).");
                 return;
             }
-
-            String licensedMachineId = parts[0];
-            LocalDate expirationDate = LocalDate.parse(parts[1]);
 
             System.out.println("\n" + "─".repeat(60));
             System.out.println("📋 Détails de la licence:");
             System.out.println("   Machine ID:   " + licensedMachineId);
             System.out.println("   Expiration:   " + expirationDate.format(DATE_FORMAT));
+            System.out.println("   Rôle:         " + role);
 
             // Check machine match
             boolean machineMatch = licensedMachineId.equals(machineId.toUpperCase());
             System.out.println("   Machine OK:   " + (machineMatch ? "✅ Oui" : "❌ Non (ne correspond pas)"));
+
+            if (!machineMatch) {
+                System.out.println("     Attendu:    " + machineId.toUpperCase());
+                System.out.println("     Reçu:       " + licensedMachineId);
+            }
 
             // Check expiration
             boolean notExpired = !LocalDate.now().isAfter(expirationDate);
